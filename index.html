@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biborne — Plateforme IoT</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080A0F;
+  --bg2: #0D1018;
+  --bg3: #121620;
+  --glass: rgba(255,255,255,0.04);
+  --glass2: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(232,93,4,0.3);
+  --orange: #E85D04;
+  --orange2: #FF7B2E;
+  --gold: #F59E0B;
+  --white: #F8FAFC;
+  --gray: #94A3B8;
+  --gray2: #64748B;
+  --red: #EF4444;
+  --green: #10B981;
+  --violet: #7B2D8B;
+  --pizza: #C62828;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;font-family:'Outfit',sans-serif;background:var(--bg);color:var(--white);overflow:hidden}
+
+/* PAGES */
+.page{position:fixed;inset:0;display:none;opacity:0;transition:opacity .4s ease}
+.page.active{display:flex;opacity:1}
+
+/* ANIMATIONS */
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(232,93,4,.3)}50%{box-shadow:0 0 40px rgba(232,93,4,.6)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+@keyframes popIn{0%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+
+.anim{animation:fadeIn .5s ease both}
+.anim-d1{animation-delay:.1s}
+.anim-d2{animation-delay:.2s}
+.anim-d3{animation-delay:.3s}
+.anim-d4{animation-delay:.4s}
+.anim-d5{animation-delay:.5s}
+
+/* AMBIENT BG */
+.ambient{position:fixed;pointer-events:none;z-index:0}
+.amb1{width:600px;height:600px;background:radial-gradient(circle,rgba(232,93,4,.12) 0%,transparent 70%);top:-100px;left:-100px;animation:float 8s ease-in-out infinite}
+.amb2{width:400px;height:400px;background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 70%);bottom:0;right:0;animation:float 6s ease-in-out infinite reverse}
+.grid-bg{position:fixed;inset:0;background-image:linear-gradient(rgba(255,255,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.02) 1px,transparent 1px);background-size:40px 40px;pointer-events:none}
+
+/* GLASS CARD */
+.glass{background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:16px}
+.glass-hover{transition:all .3s ease;cursor:pointer}
+.glass-hover:hover{background:var(--glass2);border-color:rgba(232,93,4,.4);transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4),0 0 20px rgba(232,93,4,.1)}
+
+/* BUTTON */
+.btn{padding:12px 28px;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all .3s;letter-spacing:.02em}
+.btn-primary{background:linear-gradient(135deg,var(--orange),var(--orange2));color:#fff;box-shadow:0 4px 20px rgba(232,93,4,.4)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(232,93,4,.6)}
+.btn-primary:active{transform:translateY(0)}
+.btn-ghost{background:var(--glass);border:1px solid var(--border);color:var(--gray)}
+.btn-ghost:hover{background:var(--glass2);color:var(--white);border-color:var(--border2)}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:8px}
+.btn-danger{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#FCA5A5}
+.btn-danger:hover{background:rgba(239,68,68,.25)}
+
+/* INPUT */
+.input-wrap{position:relative;margin-bottom:20px}
+.input-label{font-size:12px;font-weight:600;color:var(--gray);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;display:block}
+.input{width:100%;padding:14px 16px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;color:var(--white);font-family:'Outfit',sans-serif;font-size:15px;outline:none;transition:all .3s}
+.input:focus{border-color:var(--orange);background:rgba(232,93,4,.05);box-shadow:0 0 0 3px rgba(232,93,4,.15)}
+.input.error{border-color:var(--red);background:rgba(239,68,68,.05)}
+.input-error{font-size:12px;color:#FCA5A5;margin-top:6px;display:none}
+.input-error.show{display:block}
+.input-icon{position:absolute;right:14px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--gray2)}
+
+/* BADGE */
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.05em}
+.badge-green{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#6EE7B7}
+.badge-orange{background:rgba(232,93,4,.15);border:1px solid rgba(232,93,4,.3);color:#FDBA74}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:currentColor;animation:pulse 2s infinite}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(232,93,4,.3);border-radius:2px}
+
+/* ════════════════════════════════════
+   LOGIN PAGE
+════════════════════════════════════ */
+#loginPage{align-items:center;justify-content:center;flex-direction:column}
+
+.login-logo{text-align:center;margin-bottom:48px;animation:fadeIn .6s ease both}
+.login-logo-icon{width:72px;height:72px;background:linear-gradient(135deg,var(--orange),var(--orange2));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:32px;font-weight:900;color:#fff;margin:0 auto 16px;box-shadow:0 8px 32px rgba(232,93,4,.5);animation:glow 3s ease-in-out infinite}
+.login-logo h1{font-size:28px;font-weight:800;letter-spacing:.05em}
+.login-logo h1 span{color:var(--orange)}
+.login-logo p{font-size:13px;color:var(--gray);margin-top:4px;letter-spacing:.05em}
+
+.login-card{width:100%;max-width:440px;padding:40px;animation:fadeIn .6s .2s ease both}
+.login-title{font-size:22px;font-weight:700;margin-bottom:8px}
+.login-sub{font-size:14px;color:var(--gray);margin-bottom:32px;line-height:1.6}
+
+.login-footer{text-align:center;margin-top:24px;animation:fadeIn .6s .4s ease both}
+.login-secure{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--gray2);padding:8px 16px;background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15);border-radius:20px}
+.login-secure::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0}
+
+/* ════════════════════════════════════
+   MAIN LAYOUT
+════════════════════════════════════ */
+#dashPage,#showroomPage,#kioskPage{flex-direction:column}
+
+/* TOPBAR */
+.topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(8,10,15,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);flex-shrink:0;position:relative;z-index:50}
+.topbar-left{display:flex;align-items:center;gap:16px}
+.hamburger{width:40px;height:40px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;cursor:pointer;border-radius:10px;transition:background .3s}
+.hamburger:hover{background:var(--glass2)}
+.hamburger span{width:20px;height:2px;background:var(--white);border-radius:2px;transition:all .3s}
+.topbar-brand{font-size:18px;font-weight:800;letter-spacing:.05em}
+.topbar-brand span{color:var(--orange)}
+.topbar-right{display:flex;align-items:center;gap:12px}
+.topbar-user{font-size:13px;color:var(--gray);padding:8px 14px;background:var(--glass);border:1px solid var(--border);border-radius:8px;font-family:'JetBrains Mono',monospace}
+
+/* SIDEBAR */
+.sidebar{position:fixed;left:0;top:64px;bottom:0;width:260px;background:rgba(8,10,15,.95);backdrop-filter:blur(20px);border-right:1px solid var(--border);z-index:40;transform:translateX(-100%);transition:transform .35s cubic-bezier(.4,0,.2,1);padding:24px 0;display:flex;flex-direction:column}
+.sidebar.open{transform:translateX(0)}
+.sidebar-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:39;display:none;backdrop-filter:blur(2px)}
+.sidebar-overlay.show{display:block}
+.sidebar-section{padding:0 16px;margin-bottom:24px}
+.sidebar-label{font-size:10px;font-weight:700;color:var(--gray2);letter-spacing:.15em;text-transform:uppercase;padding:0 8px;margin-bottom:8px}
+.sidebar-item{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:10px;cursor:pointer;transition:all .3s;font-size:14px;font-weight:500;color:var(--gray);margin-bottom:2px}
+.sidebar-item:hover{background:var(--glass2);color:var(--white)}
+.sidebar-item.active{background:rgba(232,93,4,.15);color:var(--orange);border:1px solid rgba(232,93,4,.2)}
+.sidebar-item-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sidebar-showroom-name{flex:1;font-weight:600}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;padding:32px}
+
+/* ════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════ */
+.dash-header{margin-bottom:32px;animation:fadeIn .5s ease both}
+.dash-header h2{font-size:28px;font-weight:800;margin-bottom:6px}
+.dash-header p{font-size:14px;color:var(--gray)}
+.dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px}
+.stat-card{padding:20px 24px;animation:fadeIn .5s ease both}
+.stat-card:nth-child(1){animation-delay:.1s}
+.stat-card:nth-child(2){animation-delay:.2s}
+.stat-card:nth-child(3){animation-delay:.3s}
+.stat-val{font-size:32px;font-weight:800;background:linear-gradient(135deg,var(--orange),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-label{font-size:12px;color:var(--gray);margin-top:4px;font-weight:500}
+.dash-grid-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;animation:fadeIn .5s .2s ease both}
+.dash-grid-header h3{font-size:18px;font-weight:700}
+.showroom-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+.showroom-card{padding:28px;position:relative;overflow:hidden;animation:fadeIn .5s ease both}
+.showroom-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent)}
+.showroom-card-icon{font-size:36px;margin-bottom:16px;display:block}
+.showroom-card-name{font-size:18px;font-weight:800;margin-bottom:8px;letter-spacing:-.01em}
+.showroom-card-stats{display:flex;gap:16px;margin-bottom:20px}
+.showroom-card-stat{font-size:12px;color:var(--gray);display:flex;align-items:center;gap:6px}
+.showroom-card-stat strong{color:var(--white);font-weight:700}
+.showroom-card-footer{display:flex;justify-content:space-between;align-items:center}
+.showroom-add-card{padding:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:180px;border:2px dashed rgba(255,255,255,.1);border-radius:16px;cursor:pointer;transition:all .3s;animation:fadeIn .5s .5s ease both}
+.showroom-add-card:hover{border-color:var(--orange);background:rgba(232,93,4,.05)}
+.add-icon{width:48px;height:48px;background:var(--glass);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:12px;transition:all .3s}
+.showroom-add-card:hover .add-icon{background:rgba(232,93,4,.2)}
+.add-input-wrap{width:100%;margin-top:12px}
+.add-input-wrap input{width:100%;padding:10px 14px;background:rgba(255,255,255,.08);border:1px solid var(--border2);border-radius:8px;color:var(--white);font-family:'Outfit',sans-serif;font-size:14px;outline:none;text-align:center}
+
+/* ════════════════════════════════════
+   SHOWROOM PAGE
+════════════════════════════════════ */
+.page-header{display:flex;align-items:center;gap:16px;margin-bottom:32px;padding-bottom:24px;border-bottom:1px solid var(--border);animation:fadeIn .4s ease both}
+.page-header-accent{width:4px;height:40px;border-radius:2px;background:var(--accent);flex-shrink:0}
+.page-header h2{font-size:24px;font-weight:800;flex:1}
+.equip-section{margin-bottom:32px;animation:fadeIn .5s ease both}
+.equip-section-title{font-size:13px;font-weight:700;color:var(--gray);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.equip-section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.equip-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.equip-card{padding:20px;position:relative;animation:popIn .4s ease both}
+.equip-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px}
+.equip-icon{width:44px;height:44px;background:rgba(232,93,4,.15);border:1px solid rgba(232,93,4,.2);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.equip-menu-btn{width:28px;height:28px;border:none;background:transparent;color:var(--gray2);cursor:pointer;border-radius:6px;font-size:16px;transition:all .3s;display:flex;align-items:center;justify-content:center}
+.equip-menu-btn:hover{background:var(--glass2);color:var(--white)}
+.equip-name{font-size:16px;font-weight:700;margin-bottom:6px}
+.equip-ip{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gray2);padding:4px 8px;background:var(--glass);border-radius:6px;display:inline-block}
+.equip-clickable{cursor:pointer}
+.equip-clickable:hover .equip-icon{background:rgba(232,93,4,.3);transform:scale(1.05)}
+
+/* DROPDOWN */
+.dropdown{position:absolute;right:8px;top:40px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:180px;z-index:100;animation:popIn .2s ease both;box-shadow:0 20px 40px rgba(0,0,0,.5)}
+.dropdown-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;transition:background .2s}
+.dropdown-item:hover{background:var(--glass2)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:32px;width:100%;max-width:440px;position:relative;animation:popIn .3s ease both}
+.modal-title{font-size:20px;font-weight:800;margin-bottom:6px}
+.modal-sub{font-size:13px;color:var(--gray);margin-bottom:28px;line-height:1.6}
+.modal-close{position:absolute;top:20px;right:20px;width:32px;height:32px;background:var(--glass);border:1px solid var(--border);border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray);font-size:16px;transition:all .3s}
+.modal-close:hover{background:rgba(239,68,68,.2);color:var(--red);border-color:rgba(239,68,68,.3)}
+.modal-actions{display:flex;gap:12px;margin-top:24px}
+.modal-actions .btn{flex:1}
+.ip-options{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.ip-option{padding:16px;border:2px solid var(--border);border-radius:12px;cursor:pointer;text-align:center;transition:all .3s}
+.ip-option:hover{border-color:var(--orange);background:rgba(232,93,4,.05)}
+.ip-option.selected{border-color:var(--orange);background:rgba(232,93,4,.1)}
+.ip-option h4{font-size:15px;font-weight:700;margin-bottom:4px}
+.ip-option p{font-size:12px;color:var(--gray)}
+.ip-form{display:none}
+.ip-form.show{display:block}
+
+/* ════════════════════════════════════
+   KIOSK PAGE
+════════════════════════════════════ */
+#kioskPage{overflow:hidden}
+.kiosk-inner{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.kiosk-screen{flex:1;overflow:hidden;display:flex;flex-direction:column}
+
+/* KIOSK WELCOME */
+.kiosk-welcome{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.kiosk-bg{position:absolute;inset:0;z-index:0}
+.kiosk-pattern{position:absolute;inset:0;z-index:1;opacity:.08;display:grid;place-items:center;overflow:hidden}
+.kiosk-pattern-text{font-size:180px;font-weight:900;color:rgba(0,0,0,.5);letter-spacing:-.05em;line-height:.85;user-select:none;white-space:nowrap}
+.kiosk-content{position:relative;z-index:2;text-align:center;animation:fadeIn .5s ease both}
+.kiosk-logo-circle{width:120px;height:120px;background:#fff;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.kiosk-logo-letter{font-size:52px;font-weight:900;line-height:1}
+.kiosk-logo-name{font-size:10px;font-weight:800;letter-spacing:.1em}
+.kiosk-welcome-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:8px;text-shadow:0 2px 20px rgba(0,0,0,.3)}
+.kiosk-welcome-sub{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:48px}
+.kiosk-order-btns{display:flex;gap:16px;justify-content:center}
+.kiosk-order-btn{padding:20px 40px;border:none;border-radius:16px;font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;cursor:pointer;transition:all .3s;display:flex;flex-direction:column;align-items:center;gap:8px;background:rgba(255,255,255,.15);color:#fff;backdrop-filter:blur(10px);border:2px solid rgba(255,255,255,.3)}
+.kiosk-order-btn:hover{background:rgba(255,255,255,.25);transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.3)}
+.kiosk-order-btn .btn-emoji{font-size:32px}
+.kiosk-wave{position:absolute;bottom:0;left:0;right:0;z-index:1}
+
+/* KIOSK MENU */
+.kiosk-menu{flex:1;display:none;flex-direction:column}
+.kiosk-menu.active{display:flex}
+.kiosk-menu-header{padding:16px 20px;display:flex;align-items:center;justify-content:between;gap:12px}
+.kiosk-menu-body{flex:1;display:flex;overflow:hidden}
+.kiosk-sidebar{width:180px;overflow-y:auto;flex-shrink:0;padding:12px}
+.kiosk-cat-btn{width:100%;padding:12px;border:none;border-radius:10px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:6px;transition:all .3s;text-align:left;background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)}
+.kiosk-cat-btn.active,.kiosk-cat-btn:hover{color:#fff}
+.kiosk-products{flex:1;overflow-y:auto;padding:12px}
+.kiosk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.kiosk-product{border-radius:14px;overflow:hidden;cursor:pointer;transition:all .3s;background:rgba(255,255,255,.1);border:2px solid transparent}
+.kiosk-product:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(0,0,0,.3);border-color:rgba(255,255,255,.3)}
+.kiosk-product:active{transform:scale(.97)}
+.kiosk-product-emoji{height:90px;display:flex;align-items:center;justify-content:center;font-size:48px;background:rgba(0,0,0,.15)}
+.kiosk-product-info{padding:10px 12px}
+.kiosk-product-name{font-size:11px;font-weight:700;color:#fff;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;line-height:1.3}
+.kiosk-product-price{display:inline-block;padding:4px 10px;border-radius:6px;font-size:12px;font-weight:700;color:#fff}
+.kiosk-bar{padding:14px 20px;display:flex;align-items:center;gap:12px;border-top:1px solid rgba(255,255,255,.1)}
+.kiosk-bar-info{flex:1}
+.kiosk-bar-label{font-size:11px;font-weight:700;color:rgba(255,255,255,.6);text-transform:uppercase;letter-spacing:.08em}
+.kiosk-bar-total{font-size:22px;font-weight:800;color:#fff}
+.kiosk-bar-btn{padding:14px 24px;border:none;border-radius:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .3s}
+.kiosk-bar-btn-cancel{background:rgba(255,255,255,.15);color:rgba(255,255,255,.8)}
+.kiosk-bar-btn-order{background:var(--green);color:#fff;box-shadow:0 4px 20px rgba(16,185,129,.4)}
+.kiosk-bar-btn-order:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(16,185,129,.6)}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;padding:14px 20px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;font-size:14px;font-weight:600;z-index:9999;animation:popIn .3s ease both;box-shadow:0 20px 40px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;max-width:320px}
+.toast-success{border-color:rgba(16,185,129,.3);background:rgba(16,185,129,.1)}
+.toast-error{border-color:rgba(239,68,68,.3);background:rgba(239,68,68,.1)}
+
+/* EMPTY STATE */
+.empty{text-align:center;padding:60px 20px;color:var(--gray)}
+.empty-icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.empty-title{font-size:16px;font-weight:600;margin-bottom:8px}
+.empty-sub{font-size:13px;color:var(--gray2)}
+</style>
+</head>
+<body>
+
+<!-- AMBIENT -->
+<div class="ambient amb1"></div>
+<div class="ambient amb2"></div>
+<div class="grid-bg"></div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="ipModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('ipModal')">✕</button>
+    <div class="modal-title">Configuration IP</div>
+    <div class="modal-sub" id="ipModalSub">Choisissez le mode d'adressage pour cet équipement</div>
+    <div class="ip-options">
+      <div class="ip-option selected" id="dhcpOpt" onclick="selectIP('dhcp')">
+        <h4>🔄 DHCP</h4>
+        <p>Adresse automatique</p>
+      </div>
+      <div class="ip-option" id="staticOpt" onclick="selectIP('static')">
+        <h4>📌 Statique</h4>
+        <p>Adresse manuelle</p>
+      </div>
+    </div>
+    <div class="ip-form" id="ipForm">
+      <div class="input-wrap"><label class="input-label">Adresse IPv4</label><input class="input" id="ipAddr" placeholder="192.168.1.100"></div>
+      <div class="input-wrap"><label class="input-label">Masque de sous-réseau</label><input class="input" id="ipMask" placeholder="255.255.255.0"></div>
+      <div class="input-wrap" style="margin-bottom:0"><label class="input-label">Passerelle</label><input class="input" id="ipGw" placeholder="192.168.1.1"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('ipModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveIP()">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="renameModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('renameModal')">✕</button>
+    <div class="modal-title">Renommer l'équipement</div>
+    <div class="modal-sub">Entrez un nouveau nom pour cet équipement</div>
+    <div class="input-wrap" style="margin-bottom:0"><label class="input-label">Nouveau nom</label><input class="input" id="renameInput" placeholder="Ex: Caisse principale"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('renameModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveRename()">Renommer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="addEquipModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addEquipModal')">✕</button>
+    <div class="modal-title">Ajouter un équipement</div>
+    <div class="modal-sub">Choisissez le type d'équipement à ajouter au showroom</div>
+    <div class="ip-options">
+      <div class="ip-option" id="optCaisse" onclick="selectEquipType('caisse')" style="cursor:pointer">
+        <h4>🖥️ Caisse</h4>
+        <p>Terminal de caisse</p>
+      </div>
+      <div class="ip-option" id="optBorne" onclick="selectEquipType('borne')" style="cursor:pointer">
+        <h4>📟 Borne</h4>
+        <p>Borne de commande</p>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('addEquipModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="addEquipment()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="orderModal">
+  <div class="modal" style="text-align:center">
+    <div style="font-size:64px;margin-bottom:16px">🎉</div>
+    <div class="modal-title" style="font-size:24px">Commande envoyée !</div>
+    <div class="modal-sub">Votre commande a bien été transmise en cuisine.<br>Merci et bon appétit !</div>
+    <div style="font-size:32px;font-weight:800;color:var(--orange);margin:16px 0" id="orderTotal"></div>
+    <button class="btn btn-primary" style="width:100%" onclick="closeModal('orderModal');goWelcome()">Nouvelle commande</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Navigation</div>
+    <div class="sidebar-item active" onclick="goTo('dashPage');closeSidebar()">
+      <span>📊</span><span>Tableau de bord</span>
+    </div>
+    <div class="sidebar-item" onclick="showToast('📋 Logs d\'audit — En construction','info');closeSidebar()">
+      <span>📋</span><span>Logs d'audit</span>
+    </div>
+    <div class="sidebar-item" onclick="showToast('⚙️ Paramètres — En construction','info');closeSidebar()">
+      <span>⚙️</span><span>Paramètres</span>
+    </div>
+    <div class="sidebar-item" onclick="showToast('🔐 Sécurité RBAC — En construction','info');closeSidebar()">
+      <span>🔐</span><span>Sécurité RBAC</span>
+    </div>
+  </div>
+  <div class="sidebar-section" id="sidebarShowrooms">
+    <div class="sidebar-label">Showrooms</div>
+  </div>
+  <div style="flex:1"></div>
+  <div class="sidebar-section">
+    <div class="sidebar-item btn-danger" onclick="logout()" style="border-radius:10px">
+      <span>🚪</span><span>Déconnexion</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     LOGIN PAGE
+══════════════════════════════════ -->
+<div class="page active" id="loginPage">
+  <div class="login-logo">
+    <div class="login-logo-icon">B</div>
+    <h1>BI<span>BORNE</span></h1>
+    <p>PLATEFORME IOT CENTRALISÉE</p>
+  </div>
+  <div class="glass login-card">
+    <h2 class="login-title">Connexion</h2>
+    <p class="login-sub">Accédez à votre espace d'administration sécurisé</p>
+    <div class="input-wrap anim anim-d1">
+      <label class="input-label">Nom de domaine</label>
+      <input class="input" id="loginDomain" value="biborne.com" placeholder="biborne.com">
+      <div class="input-error" id="errDomain">Domaine invalide</div>
+    </div>
+    <div class="input-wrap anim anim-d2">
+      <label class="input-label">Adresse email</label>
+      <input class="input" id="loginEmail" placeholder="admin@biborne.com">
+      <div class="input-error" id="errEmail">L'email doit se terminer par @<span id="domainHint">biborne.com</span></div>
+    </div>
+    <div class="input-wrap anim anim-d3" style="margin-bottom:28px">
+      <label class="input-label">Mot de passe</label>
+      <input class="input" id="loginPwd" type="password" placeholder="••••••••">
+      <span class="input-icon" id="pwdToggle" onclick="togglePwd()">👁</span>
+      <div class="input-error" id="errPwd">Identifiants incorrects</div>
+    </div>
+    <button class="btn btn-primary anim anim-d4" style="width:100%;padding:16px;font-size:16px" onclick="doLogin()">
+      Connexion →
+    </button>
+  </div>
+  <div class="login-footer">
+    <div class="login-secure">Connexion chiffrée HTTPS — MFA actif</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     DASHBOARD PAGE
+══════════════════════════════════ -->
+<div class="page" id="dashPage">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="topbar-brand">BI<span>BORNE</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user" id="topbarUser">admin@biborne.com</div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+  <div class="main" id="dashMain">
+    <div class="dash-header">
+      <h2>Tableau de bord</h2>
+      <p>Bienvenue, <span id="dashWelcome">Admin Jury</span> — Voici vos showrooms virtuels</p>
+    </div>
+    <div class="dash-stats" id="dashStats"></div>
+    <div class="dash-grid-header">
+      <h3>Showrooms virtuels</h3>
+      <div class="badge badge-green"><span class="badge-dot"></span>Tous actifs</div>
+    </div>
+    <div class="showroom-grid" id="showroomGrid"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SHOWROOM PAGE
+══════════════════════════════════ -->
+<div class="page" id="showroomPage">
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="topbar-brand">BI<span>BORNE</span></div>
+    </div>
+    <div class="topbar-right">
+      <div class="topbar-user" id="showroomTopUser">admin@biborne.com</div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Déconnexion</button>
+    </div>
+  </div>
+  <div class="main">
+    <div class="page-header" id="showroomHeader">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('dashPage')">← Retour</button>
+      <div class="page-header-accent" id="showroomAccent"></div>
+      <h2 id="showroomTitle">Showroom</h2>
+      <button class="btn btn-primary btn-sm" onclick="openModal('addEquipModal')">+ Équipement</button>
+    </div>
+    <div id="showroomContent"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     KIOSK PAGE
+══════════════════════════════════ -->
+<div class="page" id="kioskPage">
+  <div class="topbar">
+    <div class="topbar-left">
+      <button class="btn btn-ghost btn-sm" onclick="goTo('showroomPage')">← Dashboard</button>
+    </div>
+    <div class="topbar-right">
+      <div class="badge badge-orange"><span class="badge-dot"></span>Simulation borne</div>
+    </div>
+  </div>
+  <div class="kiosk-inner" id="kioskInner"></div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// DATA
+// ══════════════════════════════════
+const USERS = [{email:'admin@biborne.com',pwd:'Biborne2025!',name:'Admin Jury'}];
+
+const SHOWROOMS = [
+  {id:1,name:'G LA DALLE',emoji:'🍔',color:'#E85D04',letter:'G',
+   caisses:[{id:'c1',name:'Caisse 1',ip:null,type:'caisse'}],
+   bornes:[{id:'b1',name:'Borne 1',ip:null,type:'borne'},{id:'b2',name:'Borne 2',ip:null,type:'borne'}],
+   categories:['Oh la Cheeserie','Nos Furious Fries','Menus Double Kiff','Long Dalle','Nos Menus Burgers','Burgers à la Carte','Nos Menus Wrap','Wrap à la Carte'],
+   menus:{
+     'Oh la Cheeserie':[{name:'MENU CHEESE SOLO',price:9.90,emoji:'🧀'},{name:'MENU CHEESE DUO',price:18.90,emoji:'🧀'},{name:'CHEESE',price:2.50,emoji:'🧀'},{name:'CHEESE VACHE QUI RIT',price:2.50,emoji:'🐄'},{name:'CHEESE CURRY',price:2.50,emoji:'🌶️'},{name:'CHEESE BACON',price:2.50,emoji:'🥓'},{name:'CHEESE BOURSIN',price:2.50,emoji:'🧀'}],
+     'Nos Furious Fries':[{name:'FRITES SIMPLES',price:3.50,emoji:'🍟'},{name:'FRITES FROMAGE',price:4.50,emoji:'🍟'},{name:'FRITES BACON',price:4.90,emoji:'🍟'},{name:'FRITES XXL',price:5.50,emoji:'🍟'}],
+     'Nos Menus Burgers':[{name:'MENU CLASSIC',price:10.90,emoji:'🍔'},{name:'MENU DOUBLE',price:13.90,emoji:'🍔'},{name:'MENU VEGGIE',price:10.50,emoji:'🥗'}],
+     'Burgers à la Carte':[{name:'BURGER CLASSIC',price:7.50,emoji:'🍔'},{name:'BURGER DOUBLE',price:10.00,emoji:'🍔'},{name:'BURGER VEGGIE',price:7.00,emoji:'🥗'}],
+     'Menus Double Kiff':[{name:'DOUBLE KIFF SOLO',price:14.90,emoji:'🍔'},{name:'DOUBLE KIFF DUO',price:26.90,emoji:'🍔'}],
+     'Long Dalle':[{name:'LONG DALLE CLASSIC',price:8.90,emoji:'🌮'},{name:'LONG DALLE XXL',price:10.90,emoji:'🌮'}],
+     'Nos Menus Wrap':[{name:'MENU WRAP POULET',price:9.90,emoji:'🌯'},{name:'MENU WRAP BEEF',price:10.50,emoji:'🌯'}],
+     'Wrap à la Carte':[{name:'WRAP POULET',price:6.90,emoji:'🌯'},{name:'WRAP BEEF',price:7.50,emoji:'🌯'},{name:'WRAP VEGGIE',price:6.50,emoji:'🥗'}]
+   }
+  },
+  {id:2,name:'CHAMAS TACOS',emoji:'🌮',color:'#7B2D8B',letter:'CT',
+   caisses:[{id:'c1',name:'Caisse 1',ip:null,type:'caisse'}],
+   bornes:[{id:'b1',name:'Borne 1',ip:null,type:'borne'}],
+   categories:['Tacos','Burritos','Frites','Boissons'],
+   menus:{
+     'Tacos':[{name:'TACOS TAILLE 1',price:6.90,emoji:'🌮'},{name:'TACOS TAILLE 2',price:8.90,emoji:'🌮'},{name:'TACOS TAILLE 3',price:10.90,emoji:'🌮'},{name:'TACOS TAILLE 4',price:12.90,emoji:'🌮'}],
+     'Burritos':[{name:'BURRITO CLASSIQUE',price:9.50,emoji:'🌯'},{name:'BURRITO GÉANT',price:12.50,emoji:'🌯'},{name:'BURRITO VEGGIE',price:9.00,emoji:'🥗'}],
+     'Frites':[{name:'FRITES SIMPLES',price:3.50,emoji:'🍟'},{name:'FRITES FROMAGE',price:4.50,emoji:'🍟'}],
+     'Boissons':[{name:'COCA COLA',price:2.50,emoji:'🥤'},{name:'JUS D\'ORANGE',price:2.90,emoji:'🍊'},{name:'EAU',price:1.50,emoji:'💧'}]
+   }
+  },
+  {id:3,name:'PIZZA TIME',emoji:'🍕',color:'#C62828',letter:'PT',
+   caisses:[{id:'c1',name:'Caisse 1',ip:null,type:'caisse'},{id:'c2',name:'Caisse 2',ip:null,type:'caisse'}],
+   bornes:[{id:'b1',name:'Borne 1',ip:null,type:'borne'}],
+   categories:['Pizzas','Pastas','Salades','Desserts'],
+   menus:{
+     'Pizzas':[{name:'MARGHERITA',price:10.90,emoji:'🍕'},{name:'REGINA',price:12.90,emoji:'🍕'},{name:'4 FROMAGES',price:13.50,emoji:'🍕'},{name:'CALZONE',price:13.90,emoji:'🫓'}],
+     'Pastas':[{name:'CARBONARA',price:11.50,emoji:'🍝'},{name:'BOLOGNESE',price:11.90,emoji:'🍝'},{name:'ARRABIATA',price:10.90,emoji:'🍝'}],
+     'Salades':[{name:'SALADE CÉSAR',price:9.50,emoji:'🥗'},{name:'SALADE CAPRESE',price:8.90,emoji:'🥗'}],
+     'Desserts':[{name:'TIRAMISU',price:5.50,emoji:'🍮'},{name:'PANNA COTTA',price:4.90,emoji:'🍮'},{name:'GELATO',price:3.90,emoji:'🍦'}]
+   }
+  }
+];
+
+let state = {
+  user: null,
+  showrooms: JSON.parse(JSON.stringify(SHOWROOMS)),
+  currentShowroom: null,
+  currentEquip: null,
+  ipMode: 'dhcp',
+  equipType: 'caisse',
+  cart: {},
+  orderType: null,
+  kioskCat: null,
+  openDropdown: null
+};
+
+// ══════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════
+function goTo(pageId) {
+  document.querySelectorAll('.page').forEach(p => { p.classList.remove('active'); p.style.opacity = 0; });
+  const page = document.getElementById(pageId);
+  page.classList.add('active');
+  setTimeout(() => { page.style.opacity = 1; }, 10);
+  if (pageId === 'dashPage') renderDash();
+  closeAllDropdowns();
+}
+
+function goWelcome() {
+  renderKiosk(state.currentShowroom, state.currentEquip, true);
+}
+
+// ══════════════════════════════════
+// AUTH
+// ══════════════════════════════════
+function doLogin() {
+  clearErrors();
+  const domain = document.getElementById('loginDomain').value.trim();
+  const email = document.getElementById('loginEmail').value.trim();
+  const pwd = document.getElementById('loginPwd').value;
+  let ok = true;
+  if (!email.endsWith('@' + domain)) {
+    showError('errEmail', true);
+    document.getElementById('loginEmail').classList.add('error');
+    document.getElementById('domainHint').textContent = domain;
+    ok = false;
+  }
+  const user = USERS.find(u => u.email === email && u.pwd === pwd);
+  if (!user) {
+    showError('errPwd', true);
+    document.getElementById('loginPwd').classList.add('error');
+    ok = false;
+  }
+  if (!ok) return;
+  state.user = user;
+  document.getElementById('topbarUser').textContent = user.email;
+  document.getElementById('showroomTopUser').textContent = user.email;
+  document.getElementById('dashWelcome').textContent = user.name;
+  renderSidebarShowrooms();
+  goTo('dashPage');
+  showToast('✅ Connexion réussie — Bienvenue ' + user.name, 'success');
+}
+
+function logout() {
+  state.user = null;
+  goTo('loginPage');
+  showToast('👋 Déconnexion réussie', 'info');
+}
+
+function clearErrors() {
+  document.querySelectorAll('.input-error').forEach(e => e.classList.remove('show'));
+  document.querySelectorAll('.input').forEach(e => e.classList.remove('error'));
+}
+
+function showError(id, show) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('show', show);
+}
+
+function togglePwd() {
+  const inp = document.getElementById('loginPwd');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+document.getElementById('loginEmail').addEventListener('input', function() {
+  const d = document.getElementById('loginDomain').value.trim();
+  document.getElementById('domainHint').textContent = d;
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginPage').classList.contains('active')) doLogin();
+});
+
+// ══════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════
+function renderDash() {
+  const sr = state.showrooms;
+  const totalCaisses = sr.reduce((a, s) => a + s.caisses.length, 0);
+  const totalBornes = sr.reduce((a, s) => a + s.bornes.length, 0);
+
+  document.getElementById('dashStats').innerHTML = `
+    <div class="glass stat-card"><div class="stat-val">${sr.length}</div><div class="stat-label">Showrooms actifs</div></div>
+    <div class="glass stat-card"><div class="stat-val">${totalCaisses}</div><div class="stat-label">Caisses configurées</div></div>
+    <div class="glass stat-card"><div class="stat-val">${totalBornes}</div><div class="stat-label">Bornes déployées</div></div>
+  `;
+
+  let html = sr.map((s, i) => `
+    <div class="glass glass-hover showroom-card" style="--accent:${s.color};animation-delay:${i * 0.1}s" onclick="openShowroom(${s.id})">
+      <span class="showroom-card-icon">${s.emoji}</span>
+      <div class="showroom-card-name">${s.name}</div>
+      <div class="showroom-card-stats">
+        <div class="showroom-card-stat"><strong>${s.caisses.length}</strong> caisse${s.caisses.length > 1 ? 's' : ''}</div>
+        <div class="showroom-card-stat"><strong>${s.bornes.length}</strong> borne${s.bornes.length > 1 ? 's' : ''}</div>
+      </div>
+      <div class="showroom-card-footer">
+        <div class="badge badge-green"><span class="badge-dot"></span>Actif</div>
+        <span style="color:${s.color};font-weight:700;font-size:14px">Ouvrir →</span>
+      </div>
+    </div>
+  `).join('');
+
+  html += `
+    <div class="showroom-add-card" id="addCard" onclick="toggleAddCard()">
+      <div class="add-icon">＋</div>
+      <div style="font-size:14px;font-weight:600;color:var(--gray)">Nouveau showroom</div>
+      <div class="add-input-wrap" id="addInputWrap" style="display:none" onclick="event.stopPropagation()">
+        <input id="newShowroomName" placeholder="Nom du showroom" onkeydown="if(event.key==='Enter')createShowroom()">
+        <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px" onclick="createShowroom()">Créer</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('showroomGrid').innerHTML = html;
+}
+
+let addCardOpen = false;
+function toggleAddCard() {
+  addCardOpen = !addCardOpen;
+  const wrap = document.getElementById('addInputWrap');
+  if (wrap) { wrap.style.display = addCardOpen ? 'block' : 'none'; if (addCardOpen) { setTimeout(() => document.getElementById('newShowroomName').focus(), 50); } }
+}
+
+function createShowroom() {
+  const name = document.getElementById('newShowroomName').value.trim().toUpperCase();
+  if (!name) return;
+  const colors = ['#059669', '#2563EB', '#D97706', '#7C3AED'];
+  const emojis = ['🏪', '🍜', '🥘', '🫕'];
+  const idx = state.showrooms.length;
+  const newSr = {
+    id: Date.now(), name, emoji: emojis[idx % emojis.length], color: colors[idx % colors.length],
+    letter: name.substring(0, 2), caisses: [], bornes: [],
+    categories: ['Menu'], menus: {'Menu': [{name: 'PRODUIT 1', price: 9.90, emoji: '🍽️'}]}
+  };
+  state.showrooms.push(newSr);
+  renderSidebarShowrooms();
+  renderDash();
+  showToast('✅ Showroom "' + name + '" créé !', 'success');
+}
+
+// ══════════════════════════════════
+// SHOWROOM
+// ══════════════════════════════════
+function openShowroom(id) {
+  state.currentShowroom = state.showrooms.find(s => s.id === id);
+  const sr = state.currentShowroom;
+  document.getElementById('showroomTitle').textContent = sr.emoji + '  ' + sr.name;
+  document.getElementById('showroomAccent').style.background = sr.color;
+  renderShowroomContent();
+  goTo('showroomPage');
+}
+
+function renderShowroomContent() {
+  const sr = state.currentShowroom;
+  let html = '';
+
+  const renderEquips = (items, title, icon) => {
+    let cards = items.map((eq, i) => `
+      <div class="glass glass-hover equip-card equip-clickable" style="animation-delay:${i*0.08}s" onclick="openKiosk(${JSON.stringify(eq).replace(/"/g, '&quot;')})">
+        <div class="equip-card-header">
+          <div class="equip-icon">${icon}</div>
+          <div style="position:relative">
+            <button class="equip-menu-btn" onclick="event.stopPropagation();toggleDropdown('dd_${eq.id}')" title="Options">⋯</button>
+            <div class="dropdown" id="dd_${eq.id}" style="display:none">
+              <div class="dropdown-item" onclick="event.stopPropagation();openIPModal('${eq.id}')">🌐 Adresse IP</div>
+              <div class="dropdown-item" onclick="event.stopPropagation();openRenameModal('${eq.id}','${eq.name}')">✏️ Renommer</div>
+            </div>
+          </div>
+        </div>
+        <div class="equip-name">${eq.name}</div>
+        <div class="equip-ip">${eq.ip || 'IP non configurée'}</div>
+      </div>
+    `).join('');
+    if (!items.length) cards = `<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-title">Aucune ${title.toLowerCase()}</div><div class="empty-sub">Cliquez sur "+ Équipement" pour en ajouter</div></div>`;
+    return `<div class="equip-section"><div class="equip-section-title">${title}</div><div class="equip-grid">${cards}</div></div>`;
+  };
+
+  html += renderEquips(sr.caisses, 'Caisses', '🖥️');
+  html += renderEquips(sr.bornes, 'Bornes', '📟');
+  document.getElementById('showroomContent').innerHTML = html;
+}
+
+// ══════════════════════════════════
+// EQUIPMENT ACTIONS
+// ══════════════════════════════════
+function toggleDropdown(id) {
+  closeAllDropdowns();
+  const el = document.getElementById(id);
+  if (el) { el.style.display = 'block'; state.openDropdown = id; }
+}
+
+function closeAllDropdowns() {
+  document.querySelectorAll('.dropdown').forEach(d => d.style.display = 'none');
+  state.openDropdown = null;
+}
+
+document.addEventListener('click', () => closeAllDropdowns());
+
+function openIPModal(eqId) {
+  closeAllDropdowns();
+  const sr = state.currentShowroom;
+  const eq = [...sr.caisses, ...sr.bornes].find(e => e.id === eqId);
+  state.currentEquip = eq;
+  document.getElementById('ipModalSub').textContent = 'Configuration IP pour ' + eq.name;
+  selectIP('dhcp');
+  openModal('ipModal');
+}
+
+function selectIP(mode) {
+  state.ipMode = mode;
+  document.getElementById('dhcpOpt').classList.toggle('selected', mode === 'dhcp');
+  document.getElementById('staticOpt').classList.toggle('selected', mode === 'static');
+  document.getElementById('ipForm').classList.toggle('show', mode === 'static');
+}
+
+function saveIP() {
+  const eq = state.currentEquip;
+  if (state.ipMode === 'dhcp') {
+    eq.ip = 'DHCP - Auto';
+    showToast('✅ ' + eq.name + ' — DHCP configuré', 'success');
+  } else {
+    const addr = document.getElementById('ipAddr').value.trim();
+    if (!addr) { showToast('⚠️ Entrez une adresse IP', 'error'); return; }
+    eq.ip = 'Statique - ' + addr;
+    showToast('✅ ' + eq.name + ' — IP statique configurée', 'success');
+  }
+  renderShowroomContent();
+  closeModal('ipModal');
+}
+
+function openRenameModal(eqId, currentName) {
+  closeAllDropdowns();
+  const sr = state.currentShowroom;
+  state.currentEquip = [...sr.caisses, ...sr.bornes].find(e => e.id === eqId);
+  document.getElementById('renameInput').value = currentName;
+  openModal('renameModal');
+  setTimeout(() => { document.getElementById('renameInput').select(); }, 100);
+}
+
+function saveRename() {
+  const name = document.getElementById('renameInput').value.trim();
+  if (!name) return;
+  state.currentEquip.name = name;
+  renderShowroomContent();
+  closeModal('renameModal');
+  showToast('✅ Renommé en "' + name + '"', 'success');
+}
+
+let selectedEquipType = 'caisse';
+function selectEquipType(type) {
+  selectedEquipType = type;
+  document.getElementById('optCaisse').classList.toggle('selected', type === 'caisse');
+  document.getElementById('optBorne').classList.toggle('selected', type === 'borne');
+}
+
+function addEquipment() {
+  const sr = state.currentShowroom;
+  const isCaisse = selectedEquipType === 'caisse';
+  const arr = isCaisse ? sr.caisses : sr.bornes;
+  const num = arr.length + 1;
+  const newEq = { id: (isCaisse ? 'c' : 'b') + Date.now(), name: (isCaisse ? 'Caisse' : 'Borne') + ' ' + num, ip: null, type: selectedEquipType };
+  arr.push(newEq);
+  renderShowroomContent();
+  closeModal('addEquipModal');
+  showToast('✅ ' + newEq.name + ' ajouté(e)', 'success');
+}
+
+// ══════════════════════════════════
+// KIOSK
+// ══════════════════════════════════
+function openKiosk(eq) {
+  state.currentEquip = eq;
+  state.cart = {};
+  state.orderType = null;
+  state.kioskCat = null;
+  renderKiosk(state.currentShowroom, eq, true);
+  goTo('kioskPage');
+}
+
+function renderKiosk(sr, eq, welcome) {
+  const c = sr.color;
+  const isDark = true;
+  let html = `
+    <div class="kiosk-screen" style="background:${c}">
+      <div class="kiosk-welcome" id="kioskWelcome" style="${welcome ? '' : 'display:none;'}">
+        <div class="kiosk-bg" style="background:${c}"></div>
+        <div class="kiosk-pattern">
+          <div class="kiosk-pattern-text">${sr.letter}<br>${sr.letter}<br>${sr.letter}</div>
+        </div>
+        <div class="kiosk-content">
+          <div class="kiosk-logo-circle">
+            <div class="kiosk-logo-letter" style="color:${c}">${sr.letter}</div>
+            <div class="kiosk-logo-name" style="color:${c};font-size:9px">${sr.name}</div>
+          </div>
+          <div class="kiosk-welcome-title">Bienvenue chez ${sr.name}</div>
+          <div class="kiosk-welcome-sub">Comment souhaitez-vous commander ?</div>
+          <div class="kiosk-order-btns">
+            <button class="kiosk-order-btn" onclick="startOrder('SUR PLACE')"><span class="btn-emoji">🪑</span>SUR PLACE</button>
+            <button class="kiosk-order-btn" onclick="startOrder('À EMPORTER')"><span class="btn-emoji">🛍️</span>À EMPORTER</button>
+          </div>
+        </div>
+        <svg class="kiosk-wave" viewBox="0 0 1440 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 40 Q360 80 720 40 Q1080 0 1440 40 V80 H0 Z" fill="rgba(0,0,0,0.2)"/>
+        </svg>
+      </div>
+      <div class="kiosk-menu ${welcome ? '' : 'active'}" id="kioskMenu" style="background:${c}20;background:linear-gradient(180deg,${c} 0%,${c}dd 100%)">
+        <div class="kiosk-menu-header" style="background:${c}">
+          <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;border:none;font-size:13px" onclick="goWelcome()">← Retour</button>
+          <div style="flex:1;text-align:center;font-weight:800;font-size:16px;color:#fff">${sr.name}</div>
+          <div class="badge" style="background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.3)" id="kioskOrderTypeBadge"></div>
+        </div>
+        <div class="kiosk-menu-body">
+          <div class="kiosk-sidebar" style="background:rgba(0,0,0,.2)">
+            ${sr.categories.map(cat => `<button class="kiosk-cat-btn" onclick="selectCat('${cat}')" id="cat_${cat.replace(/[^a-z0-9]/gi,'_')}" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.8)">${cat}</button>`).join('')}
+          </div>
+          <div class="kiosk-products" id="kioskProducts"></div>
+        </div>
+        <div class="kiosk-bar" style="background:rgba(0,0,0,.3)">
+          <div class="kiosk-bar-info">
+            <div class="kiosk-bar-label" id="kioskBarLabel">MA COMMANDE</div>
+            <div class="kiosk-bar-total" id="kioskBarTotal">0,00 €</div>
+          </div>
+          <button class="kiosk-bar-btn kiosk-bar-btn-cancel" onclick="state.cart={};updateCart()">Annuler</button>
+          <button class="kiosk-bar-btn kiosk-bar-btn-order" onclick="doOrder()">Commander ✓</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('kioskInner').innerHTML = html;
+}
+
+function startOrder(type) {
+  state.orderType = type;
+  state.cart = {};
+  document.getElementById('kioskWelcome').style.display = 'none';
+  const menu = document.getElementById('kioskMenu');
+  menu.classList.add('active');
+  menu.style.display = 'flex';
+  const badge = document.getElementById('kioskOrderTypeBadge');
+  if (badge) badge.textContent = type;
+  const label = document.getElementById('kioskBarLabel');
+  if (label) label.textContent = 'MA COMMANDE : ' + type;
+  const firstCat = state.currentShowroom.categories[0];
+  selectCat(firstCat);
+}
+
+function selectCat(cat) {
+  state.kioskCat = cat;
+  document.querySelectorAll('.kiosk-cat-btn').forEach(b => {
+    b.style.background = 'rgba(255,255,255,.1)';
+    b.style.color = 'rgba(255,255,255,.8)';
+    b.style.fontWeight = '600';
+  });
+  const activeBtn = document.getElementById('cat_' + cat.replace(/[^a-z0-9]/gi, '_'));
+  if (activeBtn) { activeBtn.style.background = 'rgba(255,255,255,.3)'; activeBtn.style.color = '#fff'; activeBtn.style.fontWeight = '700'; }
+  renderProducts(cat);
+}
+
+function renderProducts(cat) {
+  const sr = state.currentShowroom;
+  const prods = sr.menus[cat] || [];
+  const c = sr.color;
+  const html = `<div class="kiosk-grid">` + prods.map(p => `
+    <div class="kiosk-product" onclick="addToCart('${p.name}',${p.price})">
+      <div class="kiosk-product-emoji">${p.emoji}</div>
+      <div class="kiosk-product-info">
+        <div class="kiosk-product-name">${p.name}</div>
+        <div class="kiosk-product-price" style="background:${c}">${p.price.toFixed(2).replace('.',',')} €</div>
+      </div>
+    </div>
+  `).join('') + `</div>`;
+  const container = document.getElementById('kioskProducts');
+  if (container) { container.innerHTML = html; }
+}
+
+function addToCart(name, price) {
+  if (!state.cart[name]) state.cart[name] = { price, qty: 0 };
+  state.cart[name].qty++;
+  updateCart();
+  showToast('+ ' + name, 'success');
+}
+
+function updateCart() {
+  const total = Object.values(state.cart).reduce((a, v) => a + v.price * v.qty, 0);
+  const el = document.getElementById('kioskBarTotal');
+  if (el) el.textContent = total.toFixed(2).replace('.', ',') + ' €';
+}
+
+function doOrder() {
+  const total = Object.values(state.cart).reduce((a, v) => a + v.price * v.qty, 0);
+  if (total === 0) { showToast('⚠️ Ajoutez des produits avant de commander', 'error'); return; }
+  document.getElementById('orderTotal').textContent = total.toFixed(2).replace('.', ',') + ' €';
+  openModal('orderModal');
+}
+
+// ══════════════════════════════════
+// SIDEBAR
+// ══════════════════════════════════
+function renderSidebarShowrooms() {
+  const html = state.showrooms.map(s => `
+    <div class="sidebar-item" onclick="openShowroom(${s.id});closeSidebar()">
+      <div class="sidebar-item-dot" style="background:${s.color}"></div>
+      <span class="sidebar-showroom-name">${s.emoji} ${s.name}</span>
+    </div>
+  `).join('');
+  document.getElementById('sidebarShowrooms').innerHTML = `<div class="sidebar-label">Showrooms</div>` + html;
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('show');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('show');
+}
+
+// ══════════════════════════════════
+// MODALS
+// ══════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(mo => {
+  mo.addEventListener('click', e => { if (e.target === mo) mo.classList.remove('show'); });
+});
+
+// ══════════════════════════════════
+// TOAST
+// ══════════════════════════════════
+let toastTimer;
+function showToast(msg, type = 'info') {
+  let t = document.querySelector('.toast');
+  if (t) t.remove();
+  t = document.createElement('div');
+  t.className = 'toast' + (type === 'success' ? ' toast-success' : type === 'error' ? ' toast-error' : '');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { if (t.parentNode) t.remove(); }, 3000);
+}
+
+// Init
+document.getElementById('loginEmail').focus();
+</script>
+</body>
+</html>
